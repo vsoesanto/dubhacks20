@@ -20,7 +20,6 @@ def tweet_scraper(handle):
     except:
         print("Error during authentication")
 
-    print(handle)
 
     for status in tw.Cursor(api.user_timeline, screen_name=handle, tweet_mode="extended").items():
         # print(status.full_text)
@@ -33,9 +32,9 @@ def tweet_scraper(handle):
     print("Retrieved " + str(len(tweets)) + " tweets")
 
     df = pd.DataFrame(tweets, columns=["tweets", "date"])
-    df.to_csv("tweets.tsv", sep="\t", index=False)
+    df.to_csv("tweets_trump.tsv", sep="\t", index=False)
 
 
 if __name__ == "__main__":
-    tweet_scraper("iced__latte")
+    tweet_scraper("realDonaldTrump")
 

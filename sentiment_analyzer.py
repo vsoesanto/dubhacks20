@@ -5,7 +5,7 @@ import timeit
 import json
 import datetime
 
-credential_path = "My First Project-bb5624c66d58.json"
+credential_path = "/Users/vincent/Downloads/My First Project-bb5624c66d58.json"
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credential_path
 
 
@@ -57,65 +57,70 @@ def analyze_sentiment(text_content):
     return score
 
 
-start = timeit.default_timer()
-tweets_df = pd.read_csv("tweets.tsv", sep="\t")
-tweets = tweets_df["tweets"]
-dates = tweets_df["date"]
+def run(path=None):
+    if path is None:
+        print("Please provide a path")
+        exit()
 
+    start = timeit.default_timer()
+    tweets_df = pd.read_csv(path, sep="\t")
+    tweets = tweets_df["tweets"]
+    dates = tweets_df["date"]
 
-latest_date_str = dates[0]  # newest tweet is always the first item on the dataframe
-latest_date = datetime.datetime.strptime(latest_date_str, '%Y-%m-%d %H:%M:%S').date()
-print("latest date = " + str(latest_date))
+    latest_date_str = dates[0]  # newest tweet is always the first item on the dataframe
+    latest_date = datetime.datetime.strptime(latest_date_str, '%Y-%m-%d %H:%M:%S').date()
+    print("latest date = " + str(latest_date))
 
-date_to_sentiment = {}  # mapping of date to list of scores
-date_to_tweets = {}  # mapping of date to list of tweets
+    date_to_sentiment = {}  # mapping of date to list of scores
+    date_to_tweets = {}  # mapping of date to list of tweets
 
-average_sentiment = 0.0
-len_tweets_period = 0
-tweets_period = []
-for i, t in enumerate(tweets):
-    score = analyze_sentiment(t)
-    current_date = datetime.datetime.strptime(dates[i], '%Y-%m-%d %H:%M:%S').date()
-    # print("current date = " + str(current_date))
+    average_sentiment = 0.0
+    len_tweets_period = 0
+    tweets_period = []
+    for i, t in enumerate(tweets):
+        score = analyze_sentiment(t)
+        current_date = datetime.datetime.strptime(dates[i], '%Y-%m-%d %H:%M:%S').date()
+        # print("current date = " + str(current_date))
 
-    if (latest_date - current_date).days >= 7:
-        # print(str((latest_date - current_date).days) + " since latest date")
-        # print(tweets_period)
-        if len_tweets_period != 0:  # if there are tweets within this period
-            date_to_sentiment[str(latest_date)] = score / len_tweets_period
-            date_to_tweets[str(latest_date)] = tweets_period
+        if (latest_date - current_date).days >= 7:
+            # print(str((latest_date - current_date).days) + " since latest date")
+            # print(tweets_period)
+            if len_tweets_period != 0:  # if there are tweets within this period
+                date_to_sentiment[str(latest_date)] = score / len_tweets_period
+                date_to_tweets[str(latest_date)] = tweets_period
 
-            # reset values
-            len_tweets_period = 0
-            score = 0.0
-            tweets_period = []
-            latest_date = current_date
-            # print("adding to dictionaries")
-            # print("setting latest date to =" + str(latest_date))
-            # print()
+                # reset values
+                len_tweets_period = 0
+                score = 0.0
+                tweets_period = []
+                latest_date = current_date
+                # print("adding to dictionaries")
+                # print("setting latest date to =" + str(latest_date))
+                # print()
 
-    average_sentiment += score
-    len_tweets_period += 1
-    tweets_period.append(t)
+        average_sentiment += score
+        len_tweets_period += 1
+        tweets_period.append(t)
+        print(t)
+        print("score=" + str(score) + "\n")
 
-data = {}
-data["entries"] = []
-for date in date_to_sentiment:
-    print(date)
-    print(date_to_sentiment[date])
-    print(date_to_tweets[date])
-    print()
-    data["entries"].append({
-        "date": date,
-        "avg_sentiment": date_to_sentiment[date],
-        "tweets": date_to_tweets[date]})
+    data = {}
+    data["entries"] = []
+    for date in date_to_sentiment:
+        # print(date)
+        # print(date_to_sentiment[date])
+        # print(date_to_tweets[date])
+        # print()
+        data["entries"].append({
+            "date": date,
+            "avg_sentiment": date_to_sentiment[date],
+            "tweets": date_to_tweets[date]})
 
+    with open("results_trump.json", "w") as of:
+        json.dump(data, of)
 
-with open("results.json", "w") as of:
-    json.dump(data, of)
-
-stop = timeit.default_timer()
-print("time=" + str(stop - start))
+    stop = timeit.default_timer()
+    print("time=" + str(stop - start))
 
 
 
