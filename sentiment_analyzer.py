@@ -1,0 +1,69 @@
+import os
+from google.cloud import language_v1
+import pandas as pd
+import timeit
+
+credential_path = "/Users/vincent/Downloads/My First Project-bb5624c66d58.json"
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credential_path
+
+
+def analyze_sentiment(text_content):
+    """
+    Analyzes sentiment in a string using Google Cloud Natural Language API
+
+    @:param text_content: The text content to analyze
+    @:return overall score for sentiments in text_content
+    """
+    score = 0.0
+    client = language_v1.LanguageServiceClient()
+
+    # Available types: PLAIN_TEXT, HTML
+    # type_ = language_v1.Document.Type.PLAIN_TEXT
+    type_ = language_v1.enums.Document.Type.PLAIN_TEXT
+
+    # Optional. If not specified, the language is automatically detected.
+    # For list of supported languages:
+    # https://cloud.google.com/natural-language/docs/languages
+    language = "en"
+    document = {"content": text_content, "type": type_, "language": language}
+
+    # Available values: NONE, UTF8, UTF16, UTF32
+    encoding_type = language_v1.enums.EncodingType.UTF8
+
+    # response = client.analyze_sentiment(request = {'document': document, 'encoding_type': encoding_type})
+    response = client.analyze_sentiment(document=document, encoding_type=encoding_type)
+    # Get overall sentiment of the input document
+    # print(u"Document sentiment score: {}".format(response.document_sentiment.score))
+    # print(
+    #     u"Document sentiment magnitude: {}".format(
+    #         response.document_sentiment.magnitude
+    #     )
+    # )
+
+    # Get sentiment for all sentences in the document
+    for sentence in response.sentences:
+        score += sentence.sentiment.score
+        # print(u"Sentence text: {}".format(sentence.text.content))
+        # print(u"Sentence sentiment score: {}".format(sentence.sentiment.score))
+        # print(u"Sentence sentiment magnitude: {}".format(sentence.sentiment.magnitude))
+        # print()
+
+    # Get the language of the text, which will be the same as
+    # the language specified in the request or, if not specified,
+    # the automatically-detected language.
+    # print(u"Language of the text: {}".format(response.language))
+    return score
+
+
+start = timeit.default_timer()
+tweets = pd.read_csv("tweets.tsv", sep="\t")
+average_sentiment = 0.0
+for t in tweets.iloc[:, 0]:
+    score = analyze_sentiment(t)
+    average_sentiment += score
+print(len(tweets))
+average_sentiment /= len(tweets)
+print("sentiment score=" + str(average_sentiment))
+stop = timeit.default_timer()
+print("time=" + str(stop - start))
+
