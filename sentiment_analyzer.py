@@ -5,7 +5,7 @@ import timeit
 import json
 import datetime
 
-credential_path = "/Users/vincent/Downloads/My First Project-bb5624c66d58.json"
+credential_path = ""
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credential_path
 
 
